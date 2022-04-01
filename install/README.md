@@ -1,0 +1,1 @@
+When run from usb drive, worm installs itself on uninfected computer
