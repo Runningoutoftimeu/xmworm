@@ -9,4 +9,5 @@ git clone https://github.com/r0psteev/xmworm.git
 
 cd ./xmworm
 
-go build .```
+GOOS=windows GOARCH=amd64 go build .
+```
